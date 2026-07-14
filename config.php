@@ -6,69 +6,81 @@
 /// Set to true for debugging. Set to false to run as production.
 $GLOBALS['DEBUG'] = false; // Developer option.
 
-// This script no longer by default loads the user created playlist. If you would prefer to create your own playlist
-// change the setting $userCreatePlaylist = true;
-
-// Next, go into the HeadlessVidX/Install Instructions.txt and follow the instructions on setting up HeadlessVidX. TheTvApp // which is a Live TV playlist needs to have this installed before it can be used. 
+// Load .env file if present (do NOT commit your real keys into the repository)
+$envPath = __DIR__ . '/.env';
+if (file_exists($envPath)) {
+    $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        $line = trim($line);
+        if ($line === '' || strpos($line, '#') === 0) continue;
+        $parts = explode('=', $line, 2);
+        if (count($parts) == 2) {
+            $name = trim($parts[0]);
+            $val = trim($parts[1]);
+            // putenv so getenv() can read it later
+            putenv($name . '=' . $val);
+        }
+    }
+}
 
 // Replace 'YOUR_API_KEY' with your TMDb API key - https://www.themoviedb.org/
-//Entering your key here may be visible through google drive. Check your sharing settings.
-$apiKey = '';
+// Set via environment variable TMDB_API_KEY or in a local .env file (not committed)
+$apiKey = getenv('TMDB_API_KEY') ?: '';
 
 // Replace this with your Real-Debrid Private API token - https://real-debrid.com/apitoken
 // Don't worry about this setting if you aren't planning on using Real Debrid.
-$PRIVATE_TOKEN = '';
+$PRIVATE_TOKEN = getenv('REALDEBRID_TOKEN') ?: '';
 
 // Replace this with your Premiumize Private API token - https://www.premiumize.me/account
 // Don't worry about this setting if you aren't planning on using Premiumize.
-$premiumizeApiKey = '';
+$premiumizeApiKey = getenv('PREMIUMIZE_KEY') ?: '';
 
 // By default, on a local network the server identifies as "localhost" or "127.0.0.1" which isn't
 // accessible from other devices in your local network. Set this if you're running the script on
 // a local server and want to access it from other devices (firestick, android, etc. If so, specify
 // the server's local IP (e.g., '192.168.x.x') for network access. Leave this blank for default server
-// address or if installing on a public accessibe server.
-$userSetHost = ''; // Example: 192.168.0.100 see the help file or video for more information.
+// address or if installing on a public accessible server.
+$userSetHost = getenv('USER_SET_HOST') ?: '';
 
-// Note: The $HTTP_PROXY is utilized only during the scraping of direct movie links. This is particularly necessary if you are making a large number of requests to obtain streaming links, such as when running this script as a service. It is recommended to use backconnect proxies from providers like stormproxies.com to avoid being blocked by streaming websites.
-$HTTP_PROXY = "";
+// Note: The $HTTP_PROXY is utilized only during the scraping of direct movie links. This is particularly necessary if you are making a large number of requests to obtain streaming links, such as [...] 
+$HTTP_PROXY = getenv('HTTP_PROXY') ?: "";
 
 //Enable or disable the $HTTP_PROXY setting.
-$USE_HTTP_PROXY = false;
+$USE_HTTP_PROXY = (getenv('USE_HTTP_PROXY') !== false) ? (strtolower(getenv('USE_HTTP_PROXY')) === 'true') : false;
 
-//When set to true your playist is created by running the 'create_playlist.php' and 'create_tv_playlist.php'
-//When set to false the the movie and tv show playlist will be loaded from github. The playlists on github 
+//When set to true your playlist is created by running the 'create_playlist.php' and 'create_tv_playlist.php'
+//When set to false the movie and tv show playlist will be loaded from github. The playlists on github 
 //are around 45k movies and around 12k series.
-$userCreatePlaylist = false; // Set to false if you don't want to create any playlist.
+$userCreatePlaylist = (getenv('USER_CREATE_PLAYLIST') !== false) ? (strtolower(getenv('USER_CREATE_PLAYLIST')) === 'true') : false; // Set to false if you don't want to create any playlist.
 
 // Adds approximately 10,000 full-length adult movies to the VOD Movie playlist
 //under the category 'XXX Adult Movies'. This playlist is refreshed every Sunday.
-$INCLUDE_ADULT_VOD = false; // Set to true to include adult content.
+$INCLUDE_ADULT_VOD = (getenv('INCLUDE_ADULT_VOD') !== false) ? (strtolower(getenv('INCLUDE_ADULT_VOD')) === 'true') : false; // Set to true to include adult content.
 
 // Set how many movies and TV series you want in your playlist. TMDB shows 20 items on each page.
 // For instance, setting $totalPages to 150 could fetch approximately 35,000 movies across various genres and categories.
 // Adjust this for a bigger or smaller playlist. Be aware: generating a playlist based on this number might range 
 // from a few minutes to an hour + to complete.
-$totalPages = 25; // Adjust this if needed
+$totalPages = (getenv('TOTAL_PAGES') !== false) ? intval(getenv('TOTAL_PAGES')) : 25; // Adjust this if needed
 
 // Leave blank for any language.
-$language = 'en-US'; // TMDB search setting (language)
+$language = getenv('LANGUAGE') ?: 'en-US'; // TMDB search setting (language)
 
 // Leave blank for any country to be included in the series playlist.
-$series_with_origin_country = 'US'; // TMDB search setting (with_origin_country)
+$series_with_origin_country = getenv('SERIES_WITH_ORIGIN_COUNTRY') ?: 'US'; // TMDB search setting (with_origin_country)
 
 // Leave blank for any country to be included in the movies playlist.
-$movies_with_origin_country = 'US'; // TMDB search setting (with_origin_country)
+$movies_with_origin_country = getenv('MOVIES_WITH_ORIGIN_COUNTRY') ?: 'US'; // TMDB search setting (with_origin_country)
 
 // Leave this setting as false if you aren't intending on using Real-Debrid links.
 // set it to true if you want to use realdebrid when streaming torrents. 
 // Example: The value can be either true or false.
-$useRealDebrid = false; // Requires a real debrid private token added above.
+$useRealDebrid = (getenv('USE_REALDEBRID') !== false) ? (strtolower(getenv('USE_REALDEBRID')) === 'true') : false; // Requires a real debrid private token added above.
 
 // Leave this setting as false if you aren't intending on using Premiumize links.
 // set it to true if you want to use premiumize when streaming torrents. 
 // Example: The value can be either true or false.
-$usePremiumize = false; // Requires a Premiumize API Key added above.
+$usePremiumize = (getenv('USE_PREMIUMIZE') !== false) ? (strtolower(getenv('USE_PREMIUMIZE')) === 'true') : false; // Requires a Premiumize API Key added above.
 
 // maxResolution is the upper limit for video resolution preference in
 // pixels (e.g., 1080 for 1080p). If no links match this exact resolution,
@@ -76,40 +88,40 @@ $usePremiumize = false; // Requires a Premiumize API Key added above.
 // internet speed for higher quality you should select a lower resolution, or
 // you may experience constant freezing and buffering.
 // Example: 1080P is 1080
-$maxResolution = 1080; // numerical value only
+$maxResolution = (getenv('MAX_RESOLUTION') !== false) ? intval(getenv('MAX_RESOLUTION')) : 1080; // numerical value only
 
 // At this time the maxFileSize is used only for Stremio Sites.
-$maxFileSize = 50000; // numerical value in megabytes
+$maxFileSize = (getenv('MAX_FILESIZE') !== false) ? intval(getenv('MAX_FILESIZE')) : 50000; // numerical value in megabytes
 
 // Set the address HeadlessVidX is listening on.
-$HeadlessVidX_Address = "localhost:3202"; // Example: ip:port
+$HeadlessVidX_Address = getenv('HEADLESSVIDX_ADDR') ?: "localhost:3202"; // Example: ip:port
 
 // HEADLESSVIDX_MAX_THREADS controls the maximum number of concurrent curl requests (threads) 
 // that the script will handle simultaneously. Being headless browser operations, higher 
 // numbers of concurrent threads will have a greater impact on CPU and memory usage. 
 // Adjust this value based on your server's capacity and the desired balance between 
 // performance and resource consumption.
-$HeadlessVidX_Max_Threads = 5; // Numerical value only.
+$HeadlessVidX_Max_Threads = (getenv('HEADLESSVIDX_MAX_THREADS') !== false) ? intval(getenv('HEADLESSVIDX_MAX_THREADS')) : 5; // Numerical value only.
 
 
 // Sets the execution order of the sites stored in HeadlessVidX_sitelist. Also, check out the training guide
 // at http://localhost:3202/ to learn how to add your own list of streaming api websites to pull links from.
-$HeadlessVidXRunOrder = 'random'; // Options: random, ascending, or descending
+$HeadlessVidXRunOrder = getenv('HEADLESSVIDX_RUNORDER') ?: 'random'; // Options: random, ascending, or descending
 
 // The $cacheSize setting is used to control the size of a cache system, ensuring that
 // it doesn't grow to large and consume excessive storage space.
 // Example 10 MB is 10
-$cacheSize = 10; // numerical value only
+$cacheSize = (getenv('CACHE_SIZE') !== false) ? intval(getenv('CACHE_SIZE')) : 10; // numerical value only
 
 // Define the cache expiration duration variable (in hours)
 // Most of the non real debrid links last around 3 to 4 hours before their
 // token expires. So setting this to 3 or 4 hours should be good enough.
-$expirationHours = 3; // Default: 3 (numerical value only)
+$expirationHours = (getenv('EXPIRATION_HOURS') !== false) ? intval(getenv('EXPIRATION_HOURS')) : 3; // Default: 3 (numerical value only)
 
 // The timeout setting has only been added to the video link extractors.
 // If you set this to low you might not get any links to return.
 // Example: 20 seconds is 20
-$timeOut = 20; // numerical value only
+$timeOut = (getenv('TIME_OUT') !== false) ? intval(getenv('TIME_OUT')) : 20; // numerical value only
 
 // Change the run order here. This can be Used to speed up the process of finding a link.
 // Cut the entire line and paste it above or below another. The list is ran
@@ -175,8 +187,8 @@ $languageMapping = [
         "hr-HR" => "27",   // Croatian (Croatia)
         "other" => "9",    // Other / Multiple
     ],
-	
-	"Glodls" => [
+    
+    "Glodls" => [
         "en-US" => "1",    // English (United States)
         "fr-FR" => "2",    // French (France)
         "de-DE" => "3",    // German (Germany)
@@ -195,7 +207,7 @@ $languageMapping = [
         "bn-BD" => "12",   // Bengali (Bangladesh)
         "ta-IN" => "9",    // Tamil (India)
     ]
-	
+    
 ];
 
 function locateBaseURL() {
@@ -215,22 +227,22 @@ function locateBaseURL() {
 }
 
 
-	
+    
 
 function accessLog() {
     $logFile = 'access.log';
-	
+    
     $urlComponents = parse_url($_SERVER['REQUEST_URI']);
     $queryString = isset($urlComponents['query']) ? $urlComponents['query'] : '';
-	
+    
     parse_str($queryString, $queryParams);
     
     if (!isset($queryParams['dev'])) {
         $queryParams['dev'] = 'true'; // Set only if not already set
     }
-	
+    
     $newQueryString = http_build_query($queryParams);
-	
+    
     $modifiedUri = $urlComponents['path'];
     if (!empty($newQueryString)) {
         $modifiedUri .= '?' . $newQueryString;

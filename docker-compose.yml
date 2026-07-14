@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  php:
+    image: php:8.1-apache
+    container_name: tmdb_php
+    volumes:
+      - ./:/var/www/html:delegated
+    ports:
+      - "8000:80"
+    environment:
+      - TMDB_API_KEY
+      - REALDEBRID_TOKEN
+      - PREMIUMIZE_KEY
+      - HEADLESSVIDX_ADDR=host.docker.internal:3202
+    restart: unless-stopped
+
+  headlessvidx:
+    build: ./HeadlessVidX
+    container_name: headlessvidx
+    working_dir: /app
+    ports:
+      - "3202:3202"
+    command: npm start
+    environment:
+      - PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=false
+    restart: unless-stopped
